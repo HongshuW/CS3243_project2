@@ -155,14 +155,11 @@ class Piece:
             return " O " + self.type[:2]
 
 class Grid:
-    def __init__(self, row, col, cost):
+    def __init__(self, row, col):
         self.row = row
         self.col = col
-        self.cost = cost
         self.piece = None
-        self.is_goal = False
         self.is_blocked = False
-        self.is_reached = False
         self.parent = None
 
     def get_row_as_int(self):
@@ -179,14 +176,8 @@ class Grid:
             self.piece = piece
             self.set_is_blocked()
 
-    def set_is_goal(self):
-        self.is_goal = True
-
     def set_is_blocked(self):
         self.is_blocked = True
-
-    def set_is_reached(self):
-        self.is_reached = True
 
     def set_parent(self, parent):
         self.parent = parent
@@ -196,12 +187,10 @@ class Grid:
             return "[" + self.piece.to_string() + "]"
         elif self.is_blocked:
             return "[Block]"
-        elif self.is_goal:
-            return "[Goal ]"
         return "[     ]"
 
 class Board:
-    def __init__(self, width, height, costs):
+    def __init__(self, width, height):
         self.width = width
         self.height = height
         # create an empty board of size width * height that does not contain pieces
@@ -209,11 +198,7 @@ class Board:
         for row in range(height):
             row_array = []
             for col in range(width):
-                pos = get_position_string(get_col_char(col), row)
-                if pos in costs:
-                    row_array.append(Grid(row, get_col_char(col), costs[pos]))
-                else:
-                    row_array.append(Grid(row, get_col_char(col), 1))
+                row_array.append(Grid(row, get_col_char(col)))
             self.grids.append(row_array)
 
     def get_grid(self, location):
@@ -226,16 +211,8 @@ class Board:
         col = get_col_int(col_char)
         self.grids[row][col].set_piece(piece)
 
-    def set_goal(self, row_char, col_char):
-        row = int(row_char)
-        col = get_col_int(col_char)
-        self.grids[row][col].set_is_goal()
-
     def set_block(self, location):
         self.get_grid(location).set_is_blocked()
-
-    def set_reached(self, location):
-        self.get_grid(location).set_is_reached()
 
     def set_parent(self, child, parent):
         child_row = int(child[1])
@@ -246,16 +223,6 @@ class Board:
 
     def is_occupied_at(self, row_int, col_int):
         return not (self.grids[row_int][col_int].piece is None)
-
-    def is_goal(self, location):
-        row = int(location[1])
-        col = get_col_int(location[0])
-        return self.grids[row][col].is_goal
-
-    def is_reached(self, location):
-        row = int(location[1])
-        col = get_col_int(location[0])
-        return self.grids[row][col].is_reached
 
     def able_to_move_to(self, location):
         grid = self.get_grid(location)
@@ -302,7 +269,68 @@ def search():
 # Goal State to return example: {('a', 0) : Queen, ('d', 10) : Knight, ('g', 25) : Rook}
 def run_local():
     # You can code in here but you cannot remove this function or change the return type
+
+    # Parse the file
     testfile = sys.argv[1] #Do not remove. This is your input testfile.
+    input_file = open(testfile, "r")
+    lines = input_file.readlines()
+    rows = int(lines[0].split(":")[-1])
+    cols = int(lines[1].split(":")[-1])
+    num_of_obstacles = int(lines[2].split(":")[-1])
+    # list of positions of the obstacles
+    obstacles = lines[3].split(":")[-1].split()
+    # parse k
+    k = int(lines[4].split(":")[-1])
+    # record positions of pieces
+    i = 5
+    enemies = dict()
+    enemy_names = lines[i][10:43].split(", ")
+    enemy_count = lines[i].split(":")[-1].split()
+    for j in range(5):
+        if (int(enemy_count[j]) > 0):
+            enemies[enemy_names[j]] = []
+    i += 2
+    length = len(lines)
+    while (i < length):
+        information = lines[i][1:-3].split(",")
+        enemies[information[0]].append(information[1])
+        i += 1
+
+    # Initialise a board
+    board = Board(cols, rows)
+    # Add obstacles
+    if num_of_obstacles > 0:
+        for obstacle in obstacles:
+            board.set_piece(Piece("Obstacle", True), obstacle[1:], obstacle[0])
+    # Add pieces into the board
+    state = State(None, [], 0)
+    def add_enemies(type):
+        if type in enemies:
+            for pos in enemies[type]:
+                board.set_piece(Piece(type, True), pos[1:], pos[0])
+    def block(type):
+        blocked = set()
+        if type in enemies:
+            for pos in enemies[type]:
+                piece = Piece(type, True)
+                blocked_pos = piece.get_blocked_positions(pos[1:], pos[0], board)
+                blocked = blocked.union(blocked_pos)
+        return blocked
+    for type in enemy_names:
+        add_enemies(type)
+    for type in enemy_names:
+        blocked = list(block(type))
+        for position in blocked:
+            board.set_block(position)
+
+    print(rows)
+    print(cols)
+    print(num_of_obstacles)
+    print(obstacles)
+    print(k)
+    print(enemies)
 
     goalState = search()
     return goalState #Format to be returned
+
+run_local()
