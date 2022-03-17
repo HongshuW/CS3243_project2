@@ -59,13 +59,13 @@ class Piece:
         minus_stop = False
         while i >= 0:
             if j + count < cols and (plus_stop == False):
-                if board.is_occupied_at(i, j + count):
+                if not board.able_to_move_to(get_position_tuple(get_col_char(j + count), i)):
                     if not(i == row_int and j == col_int):
                         plus_stop = True
                 else:
                     moves.add(get_position_tuple(get_col_char(j + count), i))
             if j - count >= 0 and (minus_stop == False):
-                if board.is_occupied_at(i, j - count):
+                if not board.able_to_move_to(get_position_tuple(get_col_char(j - count), i)):
                     if not(i == row_int and j == col_int):
                         minus_stop = True
                 else:
@@ -78,13 +78,13 @@ class Piece:
         minus_stop = False
         while i < rows:
             if j + count < cols and (plus_stop == False):
-                if board.is_occupied_at(i, j + count):
+                if not board.able_to_move_to(get_position_tuple(get_col_char(j + count), i)):
                     if not(i == row_int and j == col_int):
                         plus_stop = True
                 else:
                     moves.add(get_position_tuple(get_col_char(j + count), i))
             if j - count >= 0 and (minus_stop == False):
-                if board.is_occupied_at(i, j - count):
+                if not board.able_to_move_to(get_position_tuple(get_col_char(j - count), i)):
                     if not(i == row_int and j == col_int):
                         minus_stop = True
                 else:
@@ -98,22 +98,22 @@ class Piece:
         cols = board.width
         moves = set()
         for i in range(row_int + 1, rows):
-            if board.is_occupied_at(i, col_int):
+            if not board.able_to_move_to(get_position_tuple(get_col_char(col_int), i)):
                 break
             moves.add(get_position_tuple(get_col_char(col_int), i))
         i = row_int - 1
         while i >= 0:
-            if board.is_occupied_at(i, col_int):
+            if not board.able_to_move_to(get_position_tuple(get_col_char(col_int), i)):
                 break
             moves.add(get_position_tuple(get_col_char(col_int), i))
             i -= 1
         for j in range(col_int + 1, cols):
-            if board.is_occupied_at(row_int, j):
+            if not board.able_to_move_to(get_position_tuple(get_col_char(j), row_int)):
                 break
             moves.add(get_position_tuple(get_col_char(j), str(row_int)))
         j = col_int - 1
         while j >= 0:
-            if board.is_occupied_at(row_int, j):
+            if not board.able_to_move_to(get_position_tuple(get_col_char(j), row_int)):
                 break
             moves.add(get_position_tuple(get_col_char(j), str(row_int)))
             j -= 1
@@ -172,7 +172,6 @@ class Grid:
     def set_piece(self, piece):
         if self.piece == None:
             self.piece = piece
-            self.set_is_blocked()
 
     def set_is_blocked(self):
         self.is_blocked = True
@@ -221,7 +220,7 @@ class Board:
 
     def able_to_move_to(self, location):
         grid = self.get_grid(location)
-        return not (grid.piece != None or grid.is_blocked)
+        return grid.piece.type != "Obstacle"
 
     def get_value(self):
         # calculate number of threatened pieces
@@ -245,7 +244,7 @@ class Board:
         for row in self.grids:
             for grid in row:
                 if grid.piece != None and grid.piece.type != "Obstacle":
-                    location = grid.get_location();
+                    location = grid.get_location()
                     dictionary[location] = grid.piece.type
         return dictionary
 
@@ -272,6 +271,7 @@ class State:
         return self.board.to_dictionary()
 
     def is_goal_state(self):
+        print(self.get_value())
         return self.get_value() == 0 and self.k <= self.board.get_number_of_pieces()
 
 def get_col_int(col_char):
@@ -353,6 +353,7 @@ def run_local():
         for position in blocked:
             board.set_block(position)
 
+    print(board.to_string())
     goalState = search(state)
     return goalState #Format to be returned
 

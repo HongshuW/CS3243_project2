@@ -3,5 +3,6 @@ Cols:1
 Number of Obstacles:0
 Position of Obstacles (space between):-
 K (Minimum number of pieces left in goal):0
-Number of King, Queen, Bishop, Rook, Knight (space between):0 0 0 0 0
+Number of King, Queen, Bishop, Rook, Knight (space between):0 0 0 0 1
 Position of Pieces [Piece, Pos]:
+[Knight,a0]
