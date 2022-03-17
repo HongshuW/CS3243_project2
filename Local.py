@@ -5,16 +5,13 @@ import sys
 
 # Helper functions to aid in your implementation. Can edit/remove
 class Piece:
-    def __init__(self, type, is_enemy):
+    def __init__(self, type):
         self.type = type
-        self.is_enemy = is_enemy
 
     def get_blocked_positions(self, row_char, col_char, board):
         blocked = set()
         row = int(row_char)
         col = get_col_int(col_char)
-        if self.is_enemy == False:
-            return blocked
         if self.type == "King":
             blocked = blocked.union(self.get_king_movements(row, col, board))
         if self.type == "Queen":
@@ -149,10 +146,12 @@ class Piece:
         return moves
 
     def to_string(self):
-        if self.is_enemy:
-            return " E " + self.type[:2]
-        else:
-            return " O " + self.type[:2]
+        length = len(self.type)
+        string_form = self.type
+        while (length < 8):
+            string_form += " "
+            length += 1
+        return string_form
 
 class Grid:
     def __init__(self, row, col):
@@ -160,7 +159,6 @@ class Grid:
         self.col = col
         self.piece = None
         self.is_blocked = False
-        self.parent = None
 
     def get_row_as_int(self):
         return self.row
@@ -178,9 +176,6 @@ class Grid:
 
     def set_is_blocked(self):
         self.is_blocked = True
-
-    def set_parent(self, parent):
-        self.parent = parent
 
     def to_string(self):
         if self.piece != None:
@@ -237,13 +232,8 @@ class Board:
         return string
 
 class State:
-    def __init__(self, location, moves, nodesExplored):
-        self.location = location
-        self.moves = moves
-        self.nodesExplored = nodesExplored
-
-    def set_location(self, location):
-        self.location = location
+    def __init__(self, board):
+        self.board = board
 
 def get_col_int(col_char):
     return ord(col_char) - 97
@@ -301,18 +291,18 @@ def run_local():
     # Add obstacles
     if num_of_obstacles > 0:
         for obstacle in obstacles:
-            board.set_piece(Piece("Obstacle", True), obstacle[1:], obstacle[0])
+            board.set_piece(Piece("Obstacle"), obstacle[1:], obstacle[0])
     # Add pieces into the board
-    state = State(None, [], 0)
+    #state = State(None, [], 0)
     def add_enemies(type):
         if type in enemies:
             for pos in enemies[type]:
-                board.set_piece(Piece(type, True), pos[1:], pos[0])
+                board.set_piece(Piece(type), pos[1:], pos[0])
     def block(type):
         blocked = set()
         if type in enemies:
             for pos in enemies[type]:
-                piece = Piece(type, True)
+                piece = Piece(type)
                 blocked_pos = piece.get_blocked_positions(pos[1:], pos[0], board)
                 blocked = blocked.union(blocked_pos)
         return blocked
@@ -322,13 +312,6 @@ def run_local():
         blocked = list(block(type))
         for position in blocked:
             board.set_block(position)
-
-    print(rows)
-    print(cols)
-    print(num_of_obstacles)
-    print(obstacles)
-    print(k)
-    print(enemies)
 
     goalState = search()
     return goalState #Format to be returned
