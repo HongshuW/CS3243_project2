@@ -257,10 +257,13 @@ class Board:
         return string
 
 class State:
-    def __init__(self, board, k):
+    def __init__(self, board, k, num_of_obstacles, obstacles, enemies):
         self.board = board
         self.k = k
         self.value = None
+        self.num_of_obstacles = num_of_obstacles
+        self.obstacles = obstacles
+        self.enemies = enemies
 
     def get_value(self):
         if (self.value == None):
@@ -269,6 +272,38 @@ class State:
 
     def to_dictionary(self):
         return self.board.to_dictionary()
+
+    def get_neighbour_states(self):
+        neighbours = set()
+        for piece_type in self.enemies:
+            for pos_to_remove in self.enemies[piece_type]:
+                # Initialise a board
+                board = Board(self.board.width, self.board.height)
+                # Add obstacles
+                if self.num_of_obstacles > 0:
+                    for obstacle in self.obstacles:
+                        board.set_piece(Piece("Obstacle"), obstacle[1:], obstacle[0])
+                # Add pieces into the board
+                def add_enemies(type):
+                    for pos in self.enemies[type]:
+                        if (pos != pos_to_remove):
+                            board.set_piece(Piece(type), pos[1:], pos[0])
+                def block(type):
+                    blocked = set()
+                    for pos in self.enemies[type]:
+                        if (pos != pos_to_remove):
+                            piece = Piece(type)
+                            blocked_pos = piece.get_blocked_positions(pos[1:], pos[0], board)
+                            blocked = blocked.union(blocked_pos)
+                    return blocked
+                for type in self.enemies:
+                    add_enemies(type)
+                for type in self.enemies:
+                    blocked = list(block(type))
+                    for position in blocked:
+                        board.set_block(position)
+                neighbours.add(board)
+        return neighbours
 
     def is_goal_state(self):
         print(self.get_value())
@@ -333,7 +368,6 @@ def run_local():
         for obstacle in obstacles:
             board.set_piece(Piece("Obstacle"), obstacle[1:], obstacle[0])
     # Add pieces into the board
-    state = State(board, k)
     def add_enemies(type):
         if type in enemies:
             for pos in enemies[type]:
@@ -353,6 +387,7 @@ def run_local():
         for position in blocked:
             board.set_block(position)
 
+    state = State(board, k, num_of_obstacles, obstacles, enemies)
     print(board.to_string())
     goalState = search(state)
     return goalState #Format to be returned
