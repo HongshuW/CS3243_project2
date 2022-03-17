@@ -160,7 +160,7 @@ class Grid:
         self.row = row
         self.col = col
         self.piece = None
-        self.is_blocked = False
+        self.blocked = 0
 
     def get_row_as_int(self):
         return self.row
@@ -175,8 +175,8 @@ class Grid:
         if self.piece == None:
             self.piece = piece
 
-    def set_is_blocked(self):
-        self.is_blocked = True
+    def set_blocked(self):
+        self.blocked += 1
 
     def to_string(self):
         if self.piece != None:
@@ -206,7 +206,7 @@ class Board:
         self.grids[row][col].set_piece(piece)
 
     def set_block(self, location):
-        self.get_grid(location).set_is_blocked()
+        self.get_grid(location).set_blocked()
 
     def is_occupied_at(self, row_int, col_int):
         return not (self.grids[row_int][col_int].piece is None)
@@ -220,8 +220,8 @@ class Board:
         count = 0
         for row in self.grids:
             for grid in row:
-                if grid.piece != None and grid.is_blocked and grid.piece.type != "Obstacle":
-                    count += 1
+                if grid.piece != None and grid.piece.type != "Obstacle":
+                    count += grid.blocked
         return count
 
     def get_number_of_pieces(self):
@@ -393,3 +393,5 @@ def run_local():
     state = State(board, k, num_of_obstacles, obstacles, pieces)
     goalState = search(state)
     return goalState #Format to be returned
+
+print(run_local())
