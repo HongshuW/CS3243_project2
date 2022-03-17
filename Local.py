@@ -223,6 +223,15 @@ class Board:
         grid = self.get_grid(location)
         return not (grid.piece != None or grid.is_blocked)
 
+    def get_value(self):
+        # calculate number of threatened pieces
+        count = 0
+        for row in self.grids:
+            for grid in row:
+                if grid.piece != None and grid.is_blocked and grid.piece.type != "Obstacle":
+                    count += 1
+        return count
+
     def to_string(self):
         string = ""
         for row in self.grids:
@@ -234,6 +243,12 @@ class Board:
 class State:
     def __init__(self, board):
         self.board = board
+        self.value = None
+
+    def get_value(self):
+        if (self.value == None):
+            self.value = self.board.get_value()
+        return self.value
 
 def get_col_int(col_char):
     return ord(col_char) - 97
@@ -293,7 +308,7 @@ def run_local():
         for obstacle in obstacles:
             board.set_piece(Piece("Obstacle"), obstacle[1:], obstacle[0])
     # Add pieces into the board
-    #state = State(None, [], 0)
+    state = State(board)
     def add_enemies(type):
         if type in enemies:
             for pos in enemies[type]:
@@ -312,6 +327,8 @@ def run_local():
         blocked = list(block(type))
         for position in blocked:
             board.set_block(position)
+
+    print(state.get_value())
 
     goalState = search()
     return goalState #Format to be returned
