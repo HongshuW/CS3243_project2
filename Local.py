@@ -286,7 +286,7 @@ class State:
         return self.get_value() == 0 and self.k <= self.board.get_number_of_pieces()
 
     def is_terminal_state(self):
-        return self.get_value() == 0 or self.k == self.board.get_number_of_pieces()
+        return self.k >= self.board.get_number_of_pieces()
 
 def get_col_int(col_char):
     return ord(col_char) - 97
@@ -301,22 +301,25 @@ def get_position_tuple(col_char, row):
     return (col_char, int(row))
 
 def search(state):
-    print(state.board.to_string())
-    if (state.is_goal_state()):
-        return state.get_pieces()
-    if (state.is_terminal_state()):
-        return None
-    neighbours = state.get_neighbour_states()
-    min = state.get_value()
-    next_state = None
-    for neighbour in neighbours:
-        value = neighbour.get_value()
-        if (value < min):
-            min = value
-            next_state = neighbour
-    if (next_state == None):
-        return None
-    return search(next_state)
+    current = state
+    while True:
+        if (current.is_goal_state()):
+            break
+        if (current.is_terminal_state()):
+            return dict()
+        neighbours = current.get_neighbour_states()
+        min = current.get_value()
+        next_state = None
+        for neighbour in neighbours:
+            value = neighbour.get_value()
+            if (value < min):
+                min = value
+                next_state = neighbour
+        if (next_state == None):
+            return current.get_pieces()
+        else:
+            current = next_state
+    return current.get_pieces()
 
 
 ### DO NOT EDIT/REMOVE THE FUNCTION HEADER BELOW###
