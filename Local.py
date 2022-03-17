@@ -1,4 +1,5 @@
 import sys
+import random
 
 ### IMPORTANT: Remove any print() functions or rename any print functions/variables/string when submitting on CodePost
 ### The autograder will not run if it detects any print function.
@@ -282,6 +283,28 @@ class State:
             neighbours.add(neigbour_state)
         return neighbours
 
+    def random_state(self):
+        # Initialise a board
+        board = Board(self.board.width, self.board.height)
+        # Add obstacles
+        if self.num_of_obstacles > 0:
+            for obstacle in self.obstacles:
+                board.set_piece(Piece("Obstacle"), obstacle[1:], obstacle[0])
+        new_pieces = dict()
+        x = random.randint(self.k, self.board.get_number_of_pieces())
+        keys = self.pieces.keys()
+        selected_keys = random.sample(keys, x)
+        for key in selected_keys:
+            new_pieces[key] = self.pieces[key]
+        for position in new_pieces:
+            new_piece = Piece(new_pieces[position])
+            board.set_piece(new_piece, position[1], position[0])
+            blocked = new_piece.get_blocked_positions(position[1], position[0], board)
+            for position in blocked:
+                board.set_block(position)
+
+        return State(board, self.k, self.num_of_obstacles, self.obstacles, new_pieces)
+
     def is_goal_state(self):
         return self.get_value() == 0 and self.k <= self.board.get_number_of_pieces()
 
@@ -301,12 +324,13 @@ def get_position_tuple(col_char, row):
     return (col_char, int(row))
 
 def search(state):
-    current = state
+    current = state.random_state()
     while True:
+        print(current.board.to_string())
         if (current.is_goal_state()):
-            break
+            return current.get_pieces()
         if (current.is_terminal_state()):
-            return dict()
+            current = state.random_state()
         neighbours = current.get_neighbour_states()
         min = current.get_value()
         next_state = None
