@@ -180,8 +180,8 @@ class Grid:
         if self.piece != None:
             return "[" + self.piece.to_string() + "]"
         elif self.is_blocked:
-            return "[Block]"
-        return "[     ]"
+            return "[Block   ]"
+        return "[        ]"
 
 class Board:
     def __init__(self, width, height):
@@ -208,19 +208,12 @@ class Board:
     def set_block(self, location):
         self.get_grid(location).set_is_blocked()
 
-    def set_parent(self, child, parent):
-        child_row = int(child[1])
-        child_col = get_col_int(child[0])
-        parent_row = int(parent[1])
-        parent_col = get_col_int(parent[0])
-        self.grids[child_row][child_col].set_parent(self.grids[parent_row][parent_col])
-
     def is_occupied_at(self, row_int, col_int):
         return not (self.grids[row_int][col_int].piece is None)
 
     def able_to_move_to(self, location):
         grid = self.get_grid(location)
-        return grid.piece.type != "Obstacle"
+        return grid.piece == None or grid.piece.type != "Obstacle"
 
     def get_value(self):
         # calculate number of threatened pieces
@@ -239,15 +232,6 @@ class Board:
                     count += 1
         return count
 
-    def to_dictionary(self):
-        dictionary = dict()
-        for row in self.grids:
-            for grid in row:
-                if grid.piece != None and grid.piece.type != "Obstacle":
-                    location = grid.get_location()
-                    dictionary[location] = grid.piece.type
-        return dictionary
-
     def to_string(self):
         string = ""
         for row in self.grids:
@@ -257,57 +241,52 @@ class Board:
         return string
 
 class State:
-    def __init__(self, board, k, num_of_obstacles, obstacles, enemies):
+    def __init__(self, board, k, num_of_obstacles, obstacles, pieces):
         self.board = board
         self.k = k
         self.value = None
         self.num_of_obstacles = num_of_obstacles
         self.obstacles = obstacles
-        self.enemies = enemies
+        self.pieces = pieces
 
     def get_value(self):
         if (self.value == None):
             self.value = self.board.get_value()
         return self.value
 
-    def to_dictionary(self):
-        return self.board.to_dictionary()
+    def get_pieces(self):
+        return self.pieces
 
     def get_neighbour_states(self):
         neighbours = set()
-        for piece_type in self.enemies:
-            for pos_to_remove in self.enemies[piece_type]:
-                # Initialise a board
-                board = Board(self.board.width, self.board.height)
-                # Add obstacles
-                if self.num_of_obstacles > 0:
-                    for obstacle in self.obstacles:
-                        board.set_piece(Piece("Obstacle"), obstacle[1:], obstacle[0])
-                # Add pieces into the board
-                def add_enemies(type):
-                    for pos in self.enemies[type]:
-                        if (pos != pos_to_remove):
-                            board.set_piece(Piece(type), pos[1:], pos[0])
-                def block(type):
-                    blocked = set()
-                    for pos in self.enemies[type]:
-                        if (pos != pos_to_remove):
-                            piece = Piece(type)
-                            blocked_pos = piece.get_blocked_positions(pos[1:], pos[0], board)
-                            blocked = blocked.union(blocked_pos)
-                    return blocked
-                for type in self.enemies:
-                    add_enemies(type)
-                for type in self.enemies:
-                    blocked = list(block(type))
-                    for position in blocked:
-                        board.set_block(position)
-                neighbours.add(board)
+        for piece in self.pieces:
+            # Initialise a board
+            board = Board(self.board.width, self.board.height)
+            # Add obstacles
+            if self.num_of_obstacles > 0:
+                for obstacle in self.obstacles:
+                    board.set_piece(Piece("Obstacle"), obstacle[1:], obstacle[0])
+            # Add pieces into the board
+            new_pieces = dict()
+            for rest in self.pieces:
+                if (rest != piece):
+                    new_pieces[rest] = self.pieces[rest]
+            for position in new_pieces:
+                new_piece = Piece(new_pieces[position])
+                board.set_piece(new_piece, position[1], position[0])
+                blocked = new_piece.get_blocked_positions(position[1], position[0], board)
+                for position in blocked:
+                    board.set_block(position)
+
+            neigbour_state = State(board, self.k, self.num_of_obstacles, self.obstacles, new_pieces)
+            neighbours.add(neigbour_state)
         return neighbours
 
     def is_goal_state(self):
-        print(self.get_value())
         return self.get_value() == 0 and self.k <= self.board.get_number_of_pieces()
+
+    def is_terminal_state(self):
+        return self.get_value() == 0 or self.k == self.board.get_number_of_pieces()
 
 def get_col_int(col_char):
     return ord(col_char) - 97
@@ -322,8 +301,22 @@ def get_position_tuple(col_char, row):
     return (col_char, int(row))
 
 def search(state):
+    print(state.board.to_string())
     if (state.is_goal_state()):
-        return state.to_dictionary()
+        return state.get_pieces()
+    if (state.is_terminal_state()):
+        return None
+    neighbours = state.get_neighbour_states()
+    min = state.get_value()
+    next_state = None
+    for neighbour in neighbours:
+        value = neighbour.get_value()
+        if (value < min):
+            min = value
+            next_state = neighbour
+    if (next_state == None):
+        return None
+    return search(next_state)
 
 
 ### DO NOT EDIT/REMOVE THE FUNCTION HEADER BELOW###
@@ -347,18 +340,13 @@ def run_local():
     # parse k
     k = int(lines[4].split(":")[-1])
     # record positions of pieces
-    i = 5
-    enemies = dict()
-    enemy_names = lines[i][10:43].split(", ")
-    enemy_count = lines[i].split(":")[-1].split()
-    for j in range(5):
-        if (int(enemy_count[j]) > 0):
-            enemies[enemy_names[j]] = []
-    i += 2
+    i = 7
+    pieces = dict()
     length = len(lines)
     while (i < length):
         information = lines[i].strip()[1:-1].split(",")
-        enemies[information[0]].append(information[1])
+        location = get_position_tuple(information[1][0], information[1][1])
+        pieces[location] = information[0]
         i += 1
 
     # Initialise a board
@@ -368,27 +356,14 @@ def run_local():
         for obstacle in obstacles:
             board.set_piece(Piece("Obstacle"), obstacle[1:], obstacle[0])
     # Add pieces into the board
-    def add_enemies(type):
-        if type in enemies:
-            for pos in enemies[type]:
-                board.set_piece(Piece(type), pos[1:], pos[0])
-    def block(type):
-        blocked = set()
-        if type in enemies:
-            for pos in enemies[type]:
-                piece = Piece(type)
-                blocked_pos = piece.get_blocked_positions(pos[1:], pos[0], board)
-                blocked = blocked.union(blocked_pos)
-        return blocked
-    for type in enemy_names:
-        add_enemies(type)
-    for type in enemy_names:
-        blocked = list(block(type))
+    for position in pieces:
+        new_piece = Piece(pieces[position])
+        board.set_piece(new_piece, position[1], position[0])
+        blocked = new_piece.get_blocked_positions(position[1], position[0], board)
         for position in blocked:
             board.set_block(position)
 
-    state = State(board, k, num_of_obstacles, obstacles, enemies)
-    print(board.to_string())
+    state = State(board, k, num_of_obstacles, obstacles, pieces)
     goalState = search(state)
     return goalState #Format to be returned
 
