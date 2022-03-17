@@ -92,6 +92,7 @@ class Piece:
                     moves.add(get_position_tuple(get_col_char(j - count), i))
             i += 1
             count += 1
+        moves.remove(get_position_tuple(get_col_char(col_int), row_int))
         return moves
 
     def get_rook_movements(self, row_int, col_int, board):
@@ -180,8 +181,6 @@ class Grid:
     def to_string(self):
         if self.piece != None:
             return "[" + self.piece.to_string() + "]"
-        elif self.is_blocked:
-            return "[Block   ]"
         return "[        ]"
 
 class Board:
@@ -291,7 +290,7 @@ class State:
             for obstacle in self.obstacles:
                 board.set_piece(Piece("Obstacle"), obstacle[1:], obstacle[0])
         new_pieces = dict()
-        x = random.randint(self.k, self.board.get_number_of_pieces())
+        x = random.randint(self.k, self.board.get_number_of_pieces() - 1)
         keys = self.pieces.keys()
         selected_keys = random.sample(keys, x)
         for key in selected_keys:
@@ -324,12 +323,13 @@ def get_position_tuple(col_char, row):
     return (col_char, int(row))
 
 def search(state):
-    current = state.random_state()
+    current = state
+    count = 1
     while True:
-        print(current.board.to_string())
         if (current.is_goal_state()):
             return current.get_pieces()
         if (current.is_terminal_state()):
+            count += 1
             current = state.random_state()
         neighbours = current.get_neighbour_states()
         min = current.get_value()
@@ -393,5 +393,3 @@ def run_local():
     state = State(board, k, num_of_obstacles, obstacles, pieces)
     goalState = search(state)
     return goalState #Format to be returned
-
-print(run_local())
