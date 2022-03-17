@@ -232,6 +232,23 @@ class Board:
                     count += 1
         return count
 
+    def get_number_of_pieces(self):
+        count = 0
+        for row in self.grids:
+            for grid in row:
+                if grid.piece != None and grid.piece.type != "Obstacle":
+                    count += 1
+        return count
+
+    def to_dictionary(self):
+        dictionary = dict()
+        for row in self.grids:
+            for grid in row:
+                if grid.piece != None and grid.piece.type != "Obstacle":
+                    location = grid.get_location();
+                    dictionary[location] = grid.piece.type
+        return dictionary
+
     def to_string(self):
         string = ""
         for row in self.grids:
@@ -241,14 +258,21 @@ class Board:
         return string
 
 class State:
-    def __init__(self, board):
+    def __init__(self, board, k):
         self.board = board
+        self.k = k
         self.value = None
 
     def get_value(self):
         if (self.value == None):
             self.value = self.board.get_value()
         return self.value
+
+    def to_dictionary(self):
+        return self.board.to_dictionary()
+
+    def is_goal_state(self):
+        return self.get_value() == 0 and self.k <= self.board.get_number_of_pieces()
 
 def get_col_int(col_char):
     return ord(col_char) - 97
@@ -262,8 +286,9 @@ def get_position_string(col_char, row):
 def get_position_tuple(col_char, row):
     return (col_char, int(row))
 
-def search():
-    pass
+def search(state):
+    if (state.is_goal_state()):
+        return state.to_dictionary()
 
 
 ### DO NOT EDIT/REMOVE THE FUNCTION HEADER BELOW###
@@ -297,7 +322,7 @@ def run_local():
     i += 2
     length = len(lines)
     while (i < length):
-        information = lines[i][1:-3].split(",")
+        information = lines[i].strip()[1:-1].split(",")
         enemies[information[0]].append(information[1])
         i += 1
 
@@ -308,7 +333,7 @@ def run_local():
         for obstacle in obstacles:
             board.set_piece(Piece("Obstacle"), obstacle[1:], obstacle[0])
     # Add pieces into the board
-    state = State(board)
+    state = State(board, k)
     def add_enemies(type):
         if type in enemies:
             for pos in enemies[type]:
@@ -328,9 +353,7 @@ def run_local():
         for position in blocked:
             board.set_block(position)
 
-    print(state.get_value())
-
-    goalState = search()
+    goalState = search(state)
     return goalState #Format to be returned
 
-run_local()
+print(run_local())
