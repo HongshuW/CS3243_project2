@@ -264,7 +264,17 @@ class Board:
         return string
 
 class State:
-    pass
+    def __init__(self, board):
+        self.board = board
+        self.value = None
+
+    def get_value(self):
+        if (self.value == None):
+            self.value = self.board.get_value()
+        return self.value
+
+    def is_goal_state(self):
+        return self.get_value() == 0
 
 def get_col_int(col_char):
     return ord(col_char) - 97
