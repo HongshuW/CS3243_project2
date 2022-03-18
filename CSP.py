@@ -288,10 +288,26 @@ def get_empty_board(width, height, num_of_obstacles, obstacles):
             board.set_piece(Piece("Obstacle"), obstacle[1:], obstacle[0])
     return board
 
+def get_unassigned_variable(all_pieces):
+    # determine a variable to assign to based on degree heuristic
+    # Queen > Bishop = Rook > King = Knight
+    if (all_pieces["Queen"] > 0):
+        return "Queen"
+    if (all_pieces["Bishop"] > 0):
+        return "Bishop"
+    if (all_pieces["Rook"] > 0):
+        return "Rook"
+    if (all_pieces["King"] > 0):
+        return "King"
+    if (all_pieces["Knight"] > 0):
+        return "Knight"
+    return None
+
 def search(state):
     if (state.is_all_assigned()):
         return state.assignments
-    # determine a variable to assign to
+    variable = get_unassigned_variable(state.all_pieces)
+
     # determine value to assign
     # inference
     # continue recursively as long as the assignment is viable
