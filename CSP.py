@@ -264,8 +264,9 @@ class Board:
         return string
 
 class State:
-    def __init__(self, board):
+    def __init__(self, board, all_pieces):
         self.board = board
+        self.all_pieces = all_pieces
         self.value = None
 
     def get_value(self):
@@ -274,7 +275,12 @@ class State:
         return self.value
 
     def is_goal_state(self):
-        return self.get_value() == 0
+        all_assigned = True
+        for piece in self.all_pieces:
+            if (self.all_pieces[piece] > 0):
+                all_assigned = False
+                break
+        return all_assigned and self.get_value() == 0
 
 def get_col_int(col_char):
     return ord(col_char) - 97
@@ -296,7 +302,7 @@ def get_empty_board(width, height, num_of_obstacles, obstacles):
             board.set_piece(Piece("Obstacle"), obstacle[1:], obstacle[0])
     return board
 
-def search():
+def search(state):
     pass
 
 
@@ -318,11 +324,17 @@ def run_CSP():
     obstacles = lines[3].split(":")[-1].split()
     piece_types = lines[4][10:43].split(", ")
     piece_counts = lines[4][60:-1].split(" ")
-    pieces = dict()
-    for i in range(5):
-        pieces[piece_types[i]] = int(piece_counts[i])
 
-    goalState = search()
+    # variables: pieces to be placed
+    all_pieces = dict()
+    for i in range(5):
+        all_pieces[piece_types[i]] = int(piece_counts[i])
+
+    # domains: grids on the board that are not occupied by obstacles
+    board = get_empty_board()
+    initial_state = State(board)
+
+    goalState = search(initial_state)
     return goalState #Format to be returned
 
 print(run_CSP())
