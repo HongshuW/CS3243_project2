@@ -3,6 +3,9 @@ import sys
 ### IMPORTANT: Remove any print() functions or rename any print functions/variables/string when submitting on CodePost
 ### The autograder will not run if it detects any print function.
 
+board_width = 0
+board_height = 0
+
 # Helper functions to aid in your implementation. Can edit/remove
 class Piece:
     def __init__(self, type):
@@ -197,6 +200,10 @@ class Grid:
     def set_blocked(self):
         self.blocked += 1
 
+    def is_edge(self):
+        return self.get_row_as_int() == 0 or self.get_row_as_int() == board_height - 1 \
+               or self.get_col_as_int() == 0 or self.get_col_as_int() == board_width - 1
+
     def to_string(self):
         if self.piece != None:
             return "[" + self.piece.to_string() + "]"
@@ -303,12 +310,23 @@ def get_unassigned_variable(all_pieces):
         return "Knight"
     return None
 
+def get_domain_values(board):
+    values = list()
+    for row in board.grids:
+        for grid in row:
+            if grid.is_edge() and grid.blocked == 0:
+                values.append(grid)
+    for row in board.grids:
+        for grid in row:
+            if grid.blocked == 0:
+                values.append(grid)
+    return values
+
 def search(state):
     if (state.is_all_assigned()):
         return state.assignments
     variable = get_unassigned_variable(state.all_pieces)
-
-    # determine value to assign
+    values = get_domain_values(state.board)
     # inference
     # continue recursively as long as the assignment is viable
 
@@ -326,6 +344,8 @@ def run_CSP():
     lines = input_file.readlines()
     rows = int(lines[0].split(":")[-1])
     cols = int(lines[1].split(":")[-1])
+    board_width = cols
+    board_height = rows
     num_of_obstacles = int(lines[2].split(":")[-1])
     # list of positions of the obstacles
     obstacles = lines[3].split(":")[-1].split()
