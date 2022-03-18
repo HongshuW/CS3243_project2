@@ -286,6 +286,7 @@ class State:
         neighbours = set()
         unselected_pieces = dict(set(self.all_pieces.items()) - set(self.pieces.items()))
 
+        # find the piece threaten the most number of other pieces
         max = -1
         piece_to_swap = None
         for piece in self.pieces:
