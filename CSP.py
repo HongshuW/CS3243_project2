@@ -295,7 +295,7 @@ def get_empty_board(width, height, num_of_obstacles, obstacles):
             board.set_piece(Piece("Obstacle"), obstacle[1:], obstacle[0])
     return board
 
-def get_unassigned_variable(all_pieces):
+def get_unassigned_variable_string(all_pieces):
     # determine a variable to assign to based on degree heuristic
     # Queen > Bishop = Rook > King = Knight
     if (all_pieces["Queen"] > 0):
@@ -314,19 +314,29 @@ def get_domain_values(board):
     values = list()
     for row in board.grids:
         for grid in row:
-            if grid.is_edge() and grid.blocked == 0:
-                values.append(grid)
+            if grid.is_edge() and grid.blocked == 0 and grid.piece == None:
+                values.append(grid.get_location())
     for row in board.grids:
         for grid in row:
-            if grid.blocked == 0:
-                values.append(grid)
+            if grid.blocked == 0 and grid.piece == None:
+                values.append(grid.get_location())
     return values
+
+def able_to_assign(value, variable, assignments, board):
+    blocked = variable.get_blocked_positions(value[0], value[1], board)
+    for assigned in assignments:
+        if assigned in blocked:
+            return False
+    return True
 
 def search(state):
     if (state.is_all_assigned()):
         return state.assignments
-    variable = get_unassigned_variable(state.all_pieces)
+    variable = Piece(get_unassigned_variable_string(state.all_pieces))
     values = get_domain_values(state.board)
+    for value in values:
+        if able_to_assign(value, variable, state.assignments, state.board):
+
     # inference
     # continue recursively as long as the assignment is viable
 
