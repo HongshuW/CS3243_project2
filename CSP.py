@@ -238,15 +238,6 @@ class Board:
         grid = self.get_grid(location)
         return grid.piece == None or grid.piece.type != "Obstacle"
 
-    def get_value(self):
-        # calculate number of threatened pieces
-        count = 0
-        for row in self.grids:
-            for grid in row:
-                if grid.piece != None and grid.piece.type != "Obstacle":
-                    count += grid.blocked
-        return count
-
     def get_number_of_pieces(self):
         count = 0
         for row in self.grids:
@@ -267,21 +258,15 @@ class State:
     def __init__(self, board, all_pieces, assignments):
         self.board = board
         self.all_pieces = all_pieces
-        self.value = None
         self.assignments = assignments
 
-    def get_value(self):
-        if (self.value == None):
-            self.value = self.board.get_value()
-        return self.value
-
-    def is_goal_state(self):
+    def is_all_assigned(self):
         all_assigned = True
         for piece in self.all_pieces:
             if (self.all_pieces[piece] > 0):
                 all_assigned = False
                 break
-        return all_assigned and self.get_value() == 0
+        return all_assigned
 
 def get_col_int(col_char):
     return ord(col_char) - 97
@@ -304,8 +289,12 @@ def get_empty_board(width, height, num_of_obstacles, obstacles):
     return board
 
 def search(state):
-    if (state.is_goal_state()):
+    if (state.is_all_assigned()):
         return state.assignments
+    # determine a variable to assign to
+    # determine value to assign
+    # inference
+    # continue recursively as long as the assignment is viable
 
 
 ### DO NOT EDIT/REMOVE THE FUNCTION HEADER BELOW###
