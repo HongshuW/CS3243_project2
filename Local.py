@@ -32,6 +32,7 @@ class Piece:
         rows = board.height
         cols = board.width
         moves = list()
+        to_attack = 0
         i = row_int - 1
         while i < row_int + 2:
             j = col_int - 1
@@ -40,8 +41,12 @@ class Piece:
                     position = get_position_tuple(get_col_char(j), i)
                     if board.able_to_move_to(position) and (not (i == row_int and j == col_int)):
                         moves.append(position)
+                    if board.has_piece(position):
+                        to_attack += 1
                 j += 1
             i += 1
+        self_pos = get_position_tuple(get_col_char(col_int), row_int)
+        board.get_grid(self_pos).set_to_attack(to_attack)
         return moves
 
     def get_queen_movements(self, row_int, col_int, board):
@@ -52,25 +57,35 @@ class Piece:
     def get_bishop_movements(self, row_int, col_int, board):
         rows = board.height
         cols = board.width
+        to_attack = 0
         moves = set()
         i = row_int
         j = col_int
         count = 0
         plus_stop = False
         minus_stop = False
+        self_pos = get_position_tuple(get_col_char(col_int), row_int)
         while i >= 0:
             if j + count < cols and (plus_stop == False):
-                if not board.able_to_move_to(get_position_tuple(get_col_char(j + count), i)):
+                pos = get_position_tuple(get_col_char(j + count), i)
+                if not board.able_to_move_to(pos):
                     if not(i == row_int and j == col_int):
                         plus_stop = True
                 else:
-                    moves.add(get_position_tuple(get_col_char(j + count), i))
+                    if self_pos != pos:
+                        moves.add(pos)
+                        if board.has_piece(pos):
+                            to_attack += 1
             if j - count >= 0 and (minus_stop == False):
-                if not board.able_to_move_to(get_position_tuple(get_col_char(j - count), i)):
+                pos = get_position_tuple(get_col_char(j - count), i)
+                if not board.able_to_move_to(pos):
                     if not(i == row_int and j == col_int):
                         minus_stop = True
                 else:
-                    moves.add(get_position_tuple(get_col_char(j - count), i))
+                    if self_pos != pos:
+                        moves.add(pos)
+                        if board.has_piece(pos):
+                            to_attack += 1
             i -= 1
             count += 1
         i = row_int
@@ -79,72 +94,122 @@ class Piece:
         minus_stop = False
         while i < rows:
             if j + count < cols and (plus_stop == False):
-                if not board.able_to_move_to(get_position_tuple(get_col_char(j + count), i)):
+                pos = get_position_tuple(get_col_char(j + count), i)
+                if not board.able_to_move_to(pos):
                     if not(i == row_int and j == col_int):
                         plus_stop = True
                 else:
-                    moves.add(get_position_tuple(get_col_char(j + count), i))
+                    if self_pos != pos:
+                        moves.add(pos)
+                        if board.has_piece(pos):
+                            to_attack += 1
             if j - count >= 0 and (minus_stop == False):
-                if not board.able_to_move_to(get_position_tuple(get_col_char(j - count), i)):
+                pos = get_position_tuple(get_col_char(j - count), i)
+                if not board.able_to_move_to(pos):
                     if not(i == row_int and j == col_int):
                         minus_stop = True
                 else:
-                    moves.add(get_position_tuple(get_col_char(j - count), i))
+                    if self_pos != pos:
+                        moves.add(pos)
+                        if board.has_piece(pos):
+                            to_attack += 1
             i += 1
             count += 1
-        moves.remove(get_position_tuple(get_col_char(col_int), row_int))
+        board.get_grid(self_pos).set_to_attack(to_attack)
         return moves
 
     def get_rook_movements(self, row_int, col_int, board):
         rows = board.height
         cols = board.width
+        to_attack = 0
         moves = set()
         for i in range(row_int + 1, rows):
-            if not board.able_to_move_to(get_position_tuple(get_col_char(col_int), i)):
+            pos = get_position_tuple(get_col_char(col_int), i)
+            if not board.able_to_move_to(pos):
                 break
-            moves.add(get_position_tuple(get_col_char(col_int), i))
+            moves.add(pos)
+            if board.has_piece(pos):
+                to_attack += 1
         i = row_int - 1
         while i >= 0:
-            if not board.able_to_move_to(get_position_tuple(get_col_char(col_int), i)):
+            pos = get_position_tuple(get_col_char(col_int), i)
+            if not board.able_to_move_to(pos):
                 break
-            moves.add(get_position_tuple(get_col_char(col_int), i))
+            moves.add(pos)
+            if board.has_piece(pos):
+                to_attack += 1
             i -= 1
         for j in range(col_int + 1, cols):
-            if not board.able_to_move_to(get_position_tuple(get_col_char(j), row_int)):
+            pos = get_position_tuple(get_col_char(j), row_int)
+            if not board.able_to_move_to(pos):
                 break
-            moves.add(get_position_tuple(get_col_char(j), str(row_int)))
+            moves.add(pos)
+            if board.has_piece(pos):
+                to_attack += 1
         j = col_int - 1
         while j >= 0:
-            if not board.able_to_move_to(get_position_tuple(get_col_char(j), row_int)):
+            pos = get_position_tuple(get_col_char(j), row_int)
+            if not board.able_to_move_to(pos):
                 break
-            moves.add(get_position_tuple(get_col_char(j), str(row_int)))
+            moves.add(pos)
+            if board.has_piece(pos):
+                to_attack += 1
             j -= 1
+        self_pos = get_position_tuple(get_col_char(col_int), row_int)
+        board.get_grid(self_pos).set_to_attack(to_attack)
         return moves
 
     def get_knight_movements(self, row_int, col_int, board):
         rows = board.height
         cols = board.width
+        to_attack = 0
         moves = set()
         if (col_int - 1 >= 0):
             if (row_int + 2 < rows):
-                moves.add(get_position_tuple(get_col_char(col_int - 1), row_int + 2))
+                pos = get_position_tuple(get_col_char(col_int - 1), row_int + 2)
+                moves.add(pos)
+                if board.has_piece(pos):
+                    to_attack += 1
             if (row_int - 2 >= 0):
-                moves.add(get_position_tuple(get_col_char(col_int - 1), row_int - 2))
+                pos = get_position_tuple(get_col_char(col_int - 1), row_int - 2)
+                moves.add(pos)
+                if board.has_piece(pos):
+                    to_attack += 1
         if (col_int - 2 >= 0):
             if (row_int + 1 < rows):
-                moves.add(get_position_tuple(get_col_char(col_int - 2), row_int + 1))
+                pos = get_position_tuple(get_col_char(col_int - 2), row_int + 1)
+                moves.add(pos)
+                if board.has_piece(pos):
+                    to_attack += 1
             if (row_int - 1 >= 0):
-                moves.add(get_position_tuple(get_col_char(col_int - 2), row_int - 1))
+                pos = get_position_tuple(get_col_char(col_int - 2), row_int - 1)
+                moves.add(pos)
+                if board.has_piece(pos):
+                    to_attack += 1
         if (col_int + 1 < cols):
             if (row_int + 2 < rows):
-                moves.add(get_position_tuple(get_col_char(col_int + 1), row_int + 2))
+                pos = get_position_tuple(get_col_char(col_int + 1), row_int + 2)
+                moves.add(pos)
+                if board.has_piece(pos):
+                    to_attack += 1
             if (row_int - 2 >= 0):
-                moves.add(get_position_tuple(get_col_char(col_int + 1), row_int - 2))
+                pos = get_position_tuple(get_col_char(col_int + 1), row_int - 2)
+                moves.add(pos)
+                if board.has_piece(pos):
+                    to_attack += 1
         if (col_int + 2 < cols):
             if (row_int + 1 < rows):
-                moves.add(get_position_tuple(get_col_char(col_int + 2), row_int + 1))
+                pos = get_position_tuple(get_col_char(col_int + 2), row_int + 1)
+                moves.add(pos)
+                if board.has_piece(pos):
+                    to_attack += 1
             if (row_int - 1 >= 0):
-                moves.add(get_position_tuple(get_col_char(col_int + 2), row_int - 1))
+                pos = get_position_tuple(get_col_char(col_int + 2), row_int - 1)
+                moves.add(pos)
+                if board.has_piece(pos):
+                    to_attack += 1
+        self_pos = get_position_tuple(get_col_char(col_int), row_int)
+        board.get_grid(self_pos).set_to_attack(to_attack)
         return moves
 
     def to_string(self):
@@ -161,6 +226,7 @@ class Grid:
         self.col = col
         self.piece = None
         self.blocked = 0
+        self.to_attack = 0
 
     def get_row_as_int(self):
         return self.row
@@ -177,6 +243,9 @@ class Grid:
 
     def set_blocked(self):
         self.blocked += 1
+
+    def set_to_attack(self, value):
+        self.to_attack += value
 
     def to_string(self):
         if self.piece != None:
@@ -211,6 +280,10 @@ class Board:
     def is_occupied_at(self, row_int, col_int):
         return not (self.grids[row_int][col_int].piece is None)
 
+    def has_piece(self, location):
+        grid = self.get_grid(location)
+        return grid.piece != None and grid.piece.type != "Obstacle"
+
     def able_to_move_to(self, location):
         grid = self.get_grid(location)
         return grid.piece == None or grid.piece.type != "Obstacle"
@@ -241,13 +314,14 @@ class Board:
         return string
 
 class State:
-    def __init__(self, board, k, num_of_obstacles, obstacles, pieces):
+    def __init__(self, board, k, num_of_obstacles, obstacles, pieces, all_pieces):
         self.board = board
         self.k = k
         self.value = None
         self.num_of_obstacles = num_of_obstacles
         self.obstacles = obstacles
         self.pieces = pieces
+        self.all_pieces = all_pieces
 
     def get_value(self):
         if (self.value == None):
@@ -259,56 +333,33 @@ class State:
 
     def get_neighbour_states(self):
         neighbours = set()
-        for piece in self.pieces:
-            # Initialise a board
-            board = Board(self.board.width, self.board.height)
-            # Add obstacles
-            if self.num_of_obstacles > 0:
-                for obstacle in self.obstacles:
-                    board.set_piece(Piece("Obstacle"), obstacle[1:], obstacle[0])
-            # Add pieces into the board
-            new_pieces = dict()
-            for rest in self.pieces:
-                if (rest != piece):
-                    new_pieces[rest] = self.pieces[rest]
-            for position in new_pieces:
-                new_piece = Piece(new_pieces[position])
-                board.set_piece(new_piece, position[1], position[0])
-                blocked = new_piece.get_blocked_positions(position[1], position[0], board)
-                for position in blocked:
-                    board.set_block(position)
+        unselected_pieces = dict(set(self.all_pieces.items()) - set(self.pieces.items()))
 
-            neigbour_state = State(board, self.k, self.num_of_obstacles, self.obstacles, new_pieces)
-            neighbours.add(neigbour_state)
+        # find the piece threaten the most number of other pieces
+        for piece_to_swap in self.pieces:
+            grid = self.board.get_grid(piece_to_swap)
+            if grid.blocked > 0 or grid.to_attack > 0:
+                # Add pieces into the board
+                for to_swap in unselected_pieces:
+                    new_pieces = dict()
+                    for rest in self.pieces:
+                        if (rest != piece_to_swap):
+                            new_pieces[rest] = self.pieces[rest]
+                    new_pieces[to_swap] = unselected_pieces[to_swap]
+                    # get an empty chess board
+                    board = get_empty_board(self.board.width, self.board.height, self.num_of_obstacles, self.obstacles)
+                    for position in new_pieces:
+                        new_piece = Piece(new_pieces[position])
+                        board.set_piece(new_piece, position[1], position[0])
+                        blocked = new_piece.get_blocked_positions(position[1], position[0], board)
+                        for position in blocked:
+                            board.set_block(position)
+                    neigbour_state = State(board, self.k, self.num_of_obstacles, self.obstacles, new_pieces, self.all_pieces)
+                    neighbours.add(neigbour_state)
         return neighbours
 
-    def random_state(self):
-        # Initialise a board
-        board = Board(self.board.width, self.board.height)
-        # Add obstacles
-        if self.num_of_obstacles > 0:
-            for obstacle in self.obstacles:
-                board.set_piece(Piece("Obstacle"), obstacle[1:], obstacle[0])
-        new_pieces = dict()
-        x = random.randint(self.k, self.board.get_number_of_pieces() - 1)
-        keys = self.pieces.keys()
-        selected_keys = random.sample(keys, x)
-        for key in selected_keys:
-            new_pieces[key] = self.pieces[key]
-        for position in new_pieces:
-            new_piece = Piece(new_pieces[position])
-            board.set_piece(new_piece, position[1], position[0])
-            blocked = new_piece.get_blocked_positions(position[1], position[0], board)
-            for position in blocked:
-                board.set_block(position)
-
-        return State(board, self.k, self.num_of_obstacles, self.obstacles, new_pieces)
-
     def is_goal_state(self):
-        return self.get_value() == 0 and self.k <= self.board.get_number_of_pieces()
-
-    def is_terminal_state(self):
-        return self.k >= self.board.get_number_of_pieces()
+        return self.get_value() == 0
 
 def get_col_int(col_char):
     return ord(col_char) - 97
@@ -322,15 +373,36 @@ def get_position_string(col_char, row):
 def get_position_tuple(col_char, row):
     return (col_char, int(row))
 
-def search(state):
+def get_empty_board(width, height, num_of_obstacles, obstacles):
+    board = Board(width, height)
+    # Add obstacles
+    if num_of_obstacles > 0:
+        for obstacle in obstacles:
+            board.set_piece(Piece("Obstacle"), obstacle[1:], obstacle[0])
+    return board
+
+def get_random_state(rows, cols, num_of_obstacles, obstacles, k, pieces):
+    # get an empty chess board
+    board = get_empty_board(cols, rows, num_of_obstacles, obstacles)
+
+    new_pieces = dict()
+    keys = pieces.keys()
+    selected_keys = random.sample(keys, k)
+    for key in selected_keys:
+        new_pieces[key] = pieces[key]
+    for position in new_pieces:
+        new_piece = Piece(new_pieces[position])
+        board.set_piece(new_piece, position[1], position[0])
+        blocked = new_piece.get_blocked_positions(position[1], position[0], board)
+        for position in blocked:
+            board.set_block(position)
+    return State(board, k, num_of_obstacles, obstacles, new_pieces, pieces)
+
+def search(state, rows, cols, num_of_obstacles, obstacles, k, pieces):
     current = state
-    count = 1
     while True:
         if (current.is_goal_state()):
             return current.get_pieces()
-        if (current.is_terminal_state()):
-            count += 1
-            current = state.random_state()
         neighbours = current.get_neighbour_states()
         min = current.get_value()
         next_state = None
@@ -340,7 +412,7 @@ def search(state):
                 min = value
                 next_state = neighbour
         if (next_state == None):
-            return current.get_pieces()
+            current = get_random_state(rows, cols, num_of_obstacles, obstacles, k, pieces)
         else:
             current = next_state
     return current.get_pieces()
@@ -361,6 +433,8 @@ def run_local():
     lines = input_file.readlines()
     rows = int(lines[0].split(":")[-1])
     cols = int(lines[1].split(":")[-1])
+    # board_width = cols
+    # board_height = rows
     num_of_obstacles = int(lines[2].split(":")[-1])
     # list of positions of the obstacles
     obstacles = lines[3].split(":")[-1].split()
@@ -372,26 +446,10 @@ def run_local():
     length = len(lines)
     while (i < length):
         information = lines[i].strip()[1:-1].split(",")
-        location = get_position_tuple(information[1][0], information[1][1])
+        location = get_position_tuple(information[1][0], information[1][1:])
         pieces[location] = information[0]
         i += 1
 
-    # Initialise a board
-    board = Board(cols, rows)
-    # Add obstacles
-    if num_of_obstacles > 0:
-        for obstacle in obstacles:
-            board.set_piece(Piece("Obstacle"), obstacle[1:], obstacle[0])
-    # Add pieces into the board
-    for position in pieces:
-        new_piece = Piece(pieces[position])
-        board.set_piece(new_piece, position[1], position[0])
-        blocked = new_piece.get_blocked_positions(position[1], position[0], board)
-        for position in blocked:
-            board.set_block(position)
-
-    state = State(board, k, num_of_obstacles, obstacles, pieces)
-    goalState = search(state)
+    initial_state = get_random_state(rows, cols, num_of_obstacles, obstacles, k, pieces)
+    goalState = search(initial_state, rows, cols, num_of_obstacles, obstacles, k, pieces)
     return goalState #Format to be returned
-
-print(run_local())
