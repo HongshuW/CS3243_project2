@@ -264,10 +264,11 @@ class Board:
         return string
 
 class State:
-    def __init__(self, board, all_pieces):
+    def __init__(self, board, all_pieces, assignments):
         self.board = board
         self.all_pieces = all_pieces
         self.value = None
+        self.assignments = assignments
 
     def get_value(self):
         if (self.value == None):
@@ -303,7 +304,8 @@ def get_empty_board(width, height, num_of_obstacles, obstacles):
     return board
 
 def search(state):
-    pass
+    if (state.is_goal_state()):
+        return state.assignments
 
 
 ### DO NOT EDIT/REMOVE THE FUNCTION HEADER BELOW###
@@ -331,8 +333,8 @@ def run_CSP():
         all_pieces[piece_types[i]] = int(piece_counts[i])
 
     # domains: grids on the board that are not occupied by obstacles
-    board = get_empty_board()
-    initial_state = State(board)
+    board = get_empty_board(cols, rows, num_of_obstacles, obstacles)
+    initial_state = State(board, all_pieces, dict())
 
     goalState = search(initial_state)
     return goalState #Format to be returned
