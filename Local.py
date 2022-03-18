@@ -389,8 +389,6 @@ def run_local():
     lines = input_file.readlines()
     rows = int(lines[0].split(":")[-1])
     cols = int(lines[1].split(":")[-1])
-    # board_width = cols
-    # board_height = rows
     num_of_obstacles = int(lines[2].split(":")[-1])
     # list of positions of the obstacles
     obstacles = lines[3].split(":")[-1].split()

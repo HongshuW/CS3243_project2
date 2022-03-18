@@ -299,6 +299,20 @@ def search():
 def run_CSP():
     # You can code in here but you cannot remove this function or change the return type
     testfile = sys.argv[1] #Do not remove. This is your input testfile.
+    input_file = open(testfile, "r")
+    lines = input_file.readlines()
+    rows = int(lines[0].split(":")[-1])
+    cols = int(lines[1].split(":")[-1])
+    num_of_obstacles = int(lines[2].split(":")[-1])
+    # list of positions of the obstacles
+    obstacles = lines[3].split(":")[-1].split()
+    piece_types = lines[4][10:43].split(", ")
+    piece_counts = lines[4][60:-1].split(" ")
+    pieces = dict()
+    for i in range(5):
+        pieces[piece_types[i]] = int(piece_counts[i])
 
     goalState = search()
     return goalState #Format to be returned
+
+print(run_CSP())
