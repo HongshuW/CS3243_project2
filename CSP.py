@@ -246,13 +246,6 @@ class Board:
     def set_unblock(self, location):
         self.get_grid(location).set_unblocked()
 
-    def is_occupied_at(self, row_int, col_int):
-        return not (self.grids[row_int][col_int].piece is None)
-
-    def has_piece(self, location):
-        grid = self.get_grid(location)
-        return grid.piece != None and grid.piece.type != "Obstacle"
-
     def able_to_move_to(self, location):
         grid = self.get_grid(location)
         return grid.piece == None or grid.piece.type != "Obstacle"
@@ -313,16 +306,27 @@ def get_unassigned_variable_string(all_pieces):
             return piece
     return None
 
-def get_domain_values(board):
+def get_domain_values(board, variable):
+    type = variable.type
     values = list()
-    for row in board.grids:
-        for grid in row:
-            if (grid.is_edge() and grid.blocked == 0 and grid.piece == None):
-                values.append(grid.get_location())
-    for row in board.grids:
-        for grid in row:
-            if ((not grid.is_edge()) and grid.blocked == 0 and grid.piece == None):
-                values.append(grid.get_location())
+    if (type == "King" or type == "Knight"):
+        for row in board.grids:
+            for grid in row:
+                if (grid.is_edge() and grid.blocked == 0 and grid.piece == None):
+                    values.append(grid.get_location())
+        for row in board.grids:
+            for grid in row:
+                if ((not grid.is_edge()) and grid.blocked == 0 and grid.piece == None):
+                    values.append(grid.get_location())
+    else:
+        for row in board.grids:
+            for grid in row:
+                if ((not grid.is_edge()) and grid.blocked == 0 and grid.piece == None):
+                    values.append(grid.get_location())
+        for row in board.grids:
+            for grid in row:
+                if (grid.is_edge() and grid.blocked == 0 and grid.piece == None):
+                    values.append(grid.get_location())
     return values
 
 def able_to_assign(value, variable, assignments, board):
@@ -370,7 +374,7 @@ def search(state):
     if (current.is_all_assigned()):
         return current.assignments
     variable = Piece(get_unassigned_variable_string(current.all_pieces))
-    values = get_domain_values(current.board)
+    values = get_domain_values(current.board, variable)
     for value in values:
         blocked = able_to_assign(value, variable, current.assignments, current.board)
         if blocked != None:
