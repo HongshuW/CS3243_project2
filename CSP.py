@@ -335,15 +335,20 @@ def able_to_assign(value, variable, assignments, board):
             return False
     return blocked
 
-def assign(value, variable, assignments, board, blocked):
-    assignments[value] = variable.type
+def assign(value, variable, state, blocked):
+    state.assignments[value] = variable.type
     for pos in blocked:
-        board.set_block(pos)
+        state.board.set_block(pos)
+    state.all_pieces[variable.type] -= 1
 
-def unassign(value, assignments, board, blocked):
-    assignments.pop(value)
+def unassign(value, variable, state, blocked):
+    state.assignments.pop(value)
     for pos in blocked:
-        board.set_unblock(pos)
+        state.board.set_unblock(pos)
+    state.all_pieces[variable.type] += 1
+
+def inference():
+    return True
 
 def search(state):
     current = state
@@ -354,10 +359,15 @@ def search(state):
     for value in values:
         blocked = able_to_assign(value, variable, current.assignments, current.board)
         if blocked != False:
-            assign(value, variable, current.assignments, current.board, blocked)
-            # inference
-            # continue recursively as long as the assignment is viable
-            unassign(value, current.assignments, current.board, blocked)
+            assign(value, variable, current, blocked)
+            inferences = inference()
+            if inferences != False:
+                # continue recursively as long as the assignment is viable
+                result = search(state)
+                if result != None:
+                    return result
+            unassign(value, variable, current, blocked)
+    return None
 
 
 ### DO NOT EDIT/REMOVE THE FUNCTION HEADER BELOW###
