@@ -200,6 +200,9 @@ class Grid:
     def set_blocked(self):
         self.blocked += 1
 
+    def set_unblocked(self):
+        self.blocked -= 1
+
     def is_edge(self):
         return self.get_row_as_int() == 0 or self.get_row_as_int() == board_height - 1 \
                or self.get_col_as_int() == 0 or self.get_col_as_int() == board_width - 1
@@ -233,6 +236,9 @@ class Board:
 
     def set_block(self, location):
         self.get_grid(location).set_blocked()
+
+    def set_unblock(self, location):
+        self.get_grid(location).set_unblocked()
 
     def is_occupied_at(self, row_int, col_int):
         return not (self.grids[row_int][col_int].piece is None)
@@ -318,7 +324,7 @@ def get_domain_values(board):
                 values.append(grid.get_location())
     for row in board.grids:
         for grid in row:
-            if grid.blocked == 0 and grid.piece == None:
+            if (not grid.is_edge()) and grid.blocked == 0 and grid.piece == None:
                 values.append(grid.get_location())
     return values
 
@@ -327,18 +333,31 @@ def able_to_assign(value, variable, assignments, board):
     for assigned in assignments:
         if assigned in blocked:
             return False
-    return True
+    return blocked
+
+def assign(value, variable, assignments, board, blocked):
+    assignments[value] = variable.type
+    for pos in blocked:
+        board.set_block(pos)
+
+def unassign(value, assignments, board, blocked):
+    assignments.pop(value)
+    for pos in blocked:
+        board.set_unblock(pos)
 
 def search(state):
-    if (state.is_all_assigned()):
-        return state.assignments
-    variable = Piece(get_unassigned_variable_string(state.all_pieces))
-    values = get_domain_values(state.board)
+    current = state
+    if (current.is_all_assigned()):
+        return current.assignments
+    variable = Piece(get_unassigned_variable_string(current.all_pieces))
+    values = get_domain_values(current.board)
     for value in values:
-        if able_to_assign(value, variable, state.assignments, state.board):
-
-    # inference
-    # continue recursively as long as the assignment is viable
+        blocked = able_to_assign(value, variable, current.assignments, current.board)
+        if blocked != False:
+            assign(value, variable, current.assignments, current.board, blocked)
+            # inference
+            # continue recursively as long as the assignment is viable
+            unassign(value, current.assignments, current.board, blocked)
 
 
 ### DO NOT EDIT/REMOVE THE FUNCTION HEADER BELOW###
