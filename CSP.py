@@ -209,6 +209,8 @@ class Grid:
     def to_string(self):
         if self.piece != None:
             return "[" + self.piece.to_string() + "]"
+        elif self.blocked > 0:
+            return "[xxxxxxxx]"
         return "[        ]"
 
 class Board:
@@ -355,8 +357,22 @@ def unassign(value, variable, state, blocked):
         state.board.set_unblock(pos)
     state.all_pieces[variable.type] += 1
 
-def inference():
-    return True
+def variables_remaining(pieces):
+    count = 0
+    for type in pieces:
+        count += pieces[type]
+    return count
+
+def values_remaining(board):
+    count = 0
+    for row in board.grids:
+        for grid in row:
+            if (grid.piece == None and grid.blocked == 0):
+                count += 1
+    return count
+
+def inference(state):
+    return variables_remaining(state.all_pieces) <= values_remaining(state.board)
 
 def search(state):
     current = state
@@ -368,7 +384,7 @@ def search(state):
         blocked = able_to_assign(value, variable, current.assignments, current.board)
         if blocked != None:
             assign(value, variable, current, blocked)
-            inferences = inference()
+            inferences = inference(state)
             if inferences != False:
                 # continue recursively as long as the assignment is viable
                 result = search(state)
