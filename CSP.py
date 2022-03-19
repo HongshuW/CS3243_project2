@@ -308,18 +308,9 @@ def get_empty_board(width, height, num_of_obstacles, obstacles):
     return board
 
 def get_unassigned_variable_string(all_pieces):
-    # determine a variable to assign to based on degree heuristic
-    # Queen > Bishop = Rook > King = Knight
-    if (all_pieces["Queen"] > 0):
-        return "Queen"
-    if (all_pieces["Bishop"] > 0):
-        return "Bishop"
-    if (all_pieces["Rook"] > 0):
-        return "Rook"
-    if (all_pieces["King"] > 0):
-        return "King"
-    if (all_pieces["Knight"] > 0):
-        return "Knight"
+    for piece in all_pieces:
+        if (all_pieces[piece] > 0):
+            return piece
     return None
 
 def get_domain_values(board):
