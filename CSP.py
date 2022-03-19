@@ -194,8 +194,7 @@ class Grid:
         return get_position_tuple(self.col, self.row)
 
     def set_piece(self, piece):
-        if self.piece == None:
-            self.piece = piece
+        self.piece = piece
 
     def set_blocked(self):
         self.blocked += 1
@@ -233,6 +232,11 @@ class Board:
         row = int(row_char)
         col = get_col_int(col_char)
         self.grids[row][col].set_piece(piece)
+
+    def remove_piece(self, row_char, col_char):
+        row = int(row_char)
+        col = get_col_int(col_char)
+        self.grids[row][col].set_piece(None)
 
     def set_block(self, location):
         self.get_grid(location).set_blocked()
@@ -320,29 +324,33 @@ def get_domain_values(board):
     values = list()
     for row in board.grids:
         for grid in row:
-            if grid.is_edge() and grid.blocked == 0 and grid.piece == None:
+            if (grid.is_edge() and grid.blocked == 0 and grid.piece == None):
                 values.append(grid.get_location())
     for row in board.grids:
         for grid in row:
-            if (not grid.is_edge()) and grid.blocked == 0 and grid.piece == None:
+            if ((not grid.is_edge()) and grid.blocked == 0 and grid.piece == None):
                 values.append(grid.get_location())
     return values
 
 def able_to_assign(value, variable, assignments, board):
-    blocked = variable.get_blocked_positions(value[0], value[1], board)
+    if board.get_grid(value).blocked > 0:
+        return None
+    blocked = variable.get_blocked_positions(value[1], value[0], board)
     for assigned in assignments:
         if assigned in blocked:
-            return False
+            return None
     return blocked
 
 def assign(value, variable, state, blocked):
     state.assignments[value] = variable.type
+    state.board.set_piece(variable, value[1], value[0])
     for pos in blocked:
         state.board.set_block(pos)
     state.all_pieces[variable.type] -= 1
 
 def unassign(value, variable, state, blocked):
     state.assignments.pop(value)
+    state.board.remove_piece(value[1], value[0])
     for pos in blocked:
         state.board.set_unblock(pos)
     state.all_pieces[variable.type] += 1
@@ -358,7 +366,7 @@ def search(state):
     values = get_domain_values(current.board)
     for value in values:
         blocked = able_to_assign(value, variable, current.assignments, current.board)
-        if blocked != False:
+        if blocked != None:
             assign(value, variable, current, blocked)
             inferences = inference()
             if inferences != False:
@@ -383,7 +391,9 @@ def run_CSP():
     lines = input_file.readlines()
     rows = int(lines[0].split(":")[-1])
     cols = int(lines[1].split(":")[-1])
+    global board_width
     board_width = cols
+    global board_height
     board_height = rows
     num_of_obstacles = int(lines[2].split(":")[-1])
     # list of positions of the obstacles
@@ -402,5 +412,3 @@ def run_CSP():
 
     goalState = search(initial_state)
     return goalState #Format to be returned
-
-print(run_CSP())
